@@ -1,0 +1,12 @@
+# wx-auto .gitignore
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+*.swp
+*.swo
+*~
+.env
+node_modules/
+.vscode/
+.idea/

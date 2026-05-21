@@ -1,0 +1,51 @@
+# Nginx reverse proxy for Deepsee
+# Place in /etc/nginx/sites-available/deepsee, then enable:
+#   ln -s /etc/nginx/sites-available/deepsee /etc/nginx/sites-enabled/
+#   nginx -t && systemctl reload nginx
+
+# If using SSL with certbot:
+#   certbot --nginx -d your-domain.com
+
+server {
+    listen 80;
+    server_name your-domain.com;  # 替换为你的域名或留空用IP
+
+    # 可选：SSL 配置（由 certbot 自动生成）
+    # listen 443 ssl;
+    # ssl_certificate /etc/letsencrypt/live/your-domain.com/fullchain.pem;
+    # ssl_certificate_key /etc/letsencrypt/live/your-domain.com/privkey.pem;
+
+    client_max_body_size 50M;
+
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # WebSocket support (if needed for future features)
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+
+        # Timeouts
+        proxy_read_timeout 60s;
+        proxy_send_timeout 60s;
+    }
+
+    # 静态资源缓存
+    location /static/ {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        expires 7d;
+        add_header Cache-Control "public, immutable";
+    }
+}
+
+# Redirect HTTP to HTTPS (if SSL enabled)
+# server {
+#     listen 80;
+#     server_name your-domain.com;
+#     return 301 https://$server_name$request_uri;
+# }
