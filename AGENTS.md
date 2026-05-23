@@ -12,7 +12,7 @@
 | 仓库 | 用途 | URL |
 |------|------|-----|
 | **Deepsee** | 后端 API 服务器 | https://github.com/leecyno1/Deepsee |
-| **wx-auto** | Agent 端配套（= 本仓库） | https://github.com/leecyno1/wx-auto |
+| **wx-auto** | Agent 端配套（= 本仓库）包含 skill、使用须知、部署文档 | https://github.com/leecyno1/wx-auto |
 
 ### 部署拓扑（云服务器）
 

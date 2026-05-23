@@ -2,14 +2,30 @@
 
 > 加载此 skill 后，Hermes Agent 获得完整的微信自动化能力。
 > 包括：消息收发、联系人管理、群管理、朋友圈、视频号操作。
+>
+> **触发关键词**：wx、wx-auto、微信、微信自动化、/wx
+
+---
+
+## 触发方式
+
+以下关键词会自动激活此 skill（不区分大小写）：
+
+| 输入 | 效果 |
+|------|------|
+| 在对话中提到「**wx**」「**微信**」「**微信自动化**」| Agent 自动加载 skill 并进入微信操作模式 |
+| 输入 **`/wx`** | 直接加载技能，后续对话可发起任何微信操作 |
+| 说「**帮我用微信** 发消息/查联系人/看在线状态」| Agent 根据上下文自动调用微信功能 |
+
+> 准确提及实操对象（如「给王总发消息」而非「帮我发个消息」）效果更佳。
 
 ---
 
 ## 系统架构
 
 - **Deepsee Server** = 后端 API（消息存储、AI 分析、微信网关回调）
-- **wx-auto** = Agent 端配套（技能、API 文档、部署指引）
-- **wechatapi.net** = iPad 协议底座（直接 HTTP 调用收发消息）
+- **wx-auto** = Agent 端配套（技能、API 文档、部署指引、使用须知）
+- **wechatapi.net** = iPad 协议底座（已完全封装，用户无需接触）
 
 **部署拓扑**（云服务器）：
 ```
@@ -19,7 +35,7 @@ Agent ──HTTP──► Deepsee(:8000) ──HTTP──► wechatapi.net
 ```
 
 **认证**：
-- Deepsee API: `Authorization: Bearer <AGENT_API_TOKEN>`
+- Deepsee API: `Authorization: Bearer <AGENT...EN>`
 - wechatapi.net: header `VideosApi-token` + body `appId`
 
 ---
@@ -33,16 +49,16 @@ Agent 有两种方式操作微信：
 ```bash
 # 发送消息
 curl -X POST http://<deepsee-ip>:8000/api/send/text \
-  -H "Authorization: Bearer <token>" \
+  -H "Authorization: Bearer *** \
   -H "Content-Type: application/json" \
   -d '{"to_wxid": "wxid_xxx", "text": "你好"}'
 
 # 查询联系人
-curl -H "Authorization: Bearer <token>" \
+curl -H "Authorization: Bearer *** \
   "http://<deepsee-ip>:8000/api/contacts?q=张三"
 
 # 查询消息
-curl -H "Authorization: Bearer <token>" \
+curl -H "Authorization: Bearer *** \
   "http://<deepsee-ip>:8000/api/messages?q=关键词"
 ```
 
@@ -68,6 +84,7 @@ Body: {"appId": "<appid>", "toWxid": "wxid", "content": "text"}
 | `GET /api/contact-scoring/contacts` | 联系人评分 |
 | `POST /api/send/text` | 发送文本 |
 | `POST /api/send/image` | 发送图片 |
+| `POST /api/send/link` | 发送链接卡片 |
 | `GET/POST /api/wechat-gateway/config` | 网关配置 |
 | `POST /api/wechat-gateway/bind-callback` | 绑定回调 |
 | `GET/POST /api/wechat-gateway/trigger-rules` | 触发规则 |
@@ -144,3 +161,11 @@ curl -X POST http://localhost:8000/api/wechat-gateway/bind-callback
 - **回调地址**：云服务器需固定 IP，或用域名 + DDNS
 - **安全**：设置 `API_TOKEN` 后再对外暴露；Nginx 代理加 SSL
 - **token 有效期**：wechatapi 的 token 会过期，需定期检查 `checkOnline` 并续期
+
+### 用户指引
+
+人类用户请阅读 **`USER_GUIDE.md`**（本仓库根目录），包含：
+- 封号风险与规避
+- 账号注册资质要求
+- 快速使用说明
+- 故障排查

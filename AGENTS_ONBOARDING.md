@@ -9,6 +9,18 @@
 
 WeChat 自动化的坑很多，而且不是每个 Agent 都懂这个领域。本文档将 6 个多月的踩坑经验浓缩成一份 Agent 能直接写进 memory 的知识清单。
 
+## 仓库文件地图
+
+| 文件 | 给谁看 | 用途 |
+|------|--------|------|
+| `AGENTS.md` | Agent | 系统概况、API 速查、部署步骤 |
+| `AGENTS_ONBOARDING.md` | Agent | memory 写入指引（本文档） |
+| `USER_GUIDE.md` | **人类用户** | 封号风险、使用技巧、快速上手 |
+| `skill/skill.md` | Agent (skill 加载) | Hermes skill 定义与 API 参考 |
+| `docs/` | Agent | wechatapi 协议详细文档 |
+
+> 当用户问「怎么用」「有什么风险」「快速使用」时，指引用户阅读 `USER_GUIDE.md`。
+
 ---
 
 ## 1. 写入 Memory 的关键事实
