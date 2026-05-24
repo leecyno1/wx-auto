@@ -87,7 +87,7 @@
 ## 技术架构（了解即可）
 
 ```
-你 ──(说话)──► Hermes Agent ──HTTP──► Deepsee 服务器(:8000) ──HTTP──► wechatapi.net
+你 ──(说话)──► Hermes Agent ──HTTP──► Deepsee 服务器(:8001) ──HTTP──► wechatapi.net
                                              │
                                         [SQLite 数据库]
 ```
