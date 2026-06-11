@@ -10,8 +10,8 @@
 ```
 ┌──────────────────┐      HTTP       ┌──────────────────────────┐      POST      ┌──────────────────┐
 │  Hermes Agent     │ ◄─────────────► │   Deepsee Server         │ ◄─────────────► │  wechatapi.net   │
-│  (AI 决策层)      │   /api/*       │   (消息存储 + AI 分析     │   callback     │  (iPad 协议)     │
-│                   │                │    + 微信网关 + 回复引擎)  │                │                  │
+│  (AI 决策层)      │   /api/*       │   (消息存储 + 微信网关 +  │   callback     │  (iPad 协议)     │
+│                   │                │    队列/规则执行)        │                │                  │
 │  本地 / 另一台    │                │   :8000                  │                │  收发微信消息    │
 └──────────────────┘                └──────────────────────────┘                └──────────────────┘
                                               │
@@ -23,15 +23,15 @@
 
 | 角色 | 位置 | 用途 |
 |------|------|------|
-| **Deepsee** | 云服务器（有固定公网 IP） | 核心后端：消息存储、AI 分析、接收微信回调、触发自动回复 |
-| **Hermes** | 本地或另一台机器 | AI 决策层：调用 Deepsee API 查询数据、发送消息、管理配置 |
+| **Deepsee** | 云服务器（有固定公网 IP） | 核心后端：消息存储、接收微信回调、触发规则、队列与发送编排；自动回复文本由 Hermes bridge 统一生成 |
+| **Hermes** | 本地或另一台机器 | AI 决策层：调用 Deepsee API 查询数据、发送消息、管理配置，并作为唯一 prompt/model 解释与生成入口 |
 | **wechatapi.net** | 第三方服务 | iPad 协议底座：收发微信消息的底层通道 |
 
 **关键设计：**
 - 微信消息 → wechatapi.net → 回调到 Deepsee → 存储入库
-- Deepsee 根据触发规则判断是否自动回复
-- Hermes 可随时通过 API 查询消息、发送消息、管理配置
-- **不需隧道**，直接使用服务器公网 IP 作为回调地址
+- Deepsee 根据触发规则判断是否进入自动回复队列
+- Hermes bridge 基于 subsession 配置统一解释 prompt 并生成回复
+- Deepsee 负责最终发送、日志、重试与状态记录
 
 ---
 
@@ -88,7 +88,7 @@ vim .env
 | `HOST` | `0.0.0.0` | **必须改**。监听所有网络接口，默认只监听 127.0.0.1 |
 | `PORT` | `8000` | 服务端口，可自定义 |
 | `AGENT_API_TOKEN` | 随机字符串如 `dGp8...` | Hermes 调用 Deepsee 的认证密钥，**请生成一个强随机串** |
-| `SILICONFLOW_API_KEY` | `sk-xxx...` | AI 模型 API Key，用于消息摘要、回复生成等 |
+| `SILICONFLOW_API_KEY` | `sk-xxx...` | Deepsee 本地分析/兼容链路使用；生产自动回复主链路由 Hermes bridge 负责 |
 | `SILICONFLOW_API_URL` | `https://api.siliconflow.cn/v1` | 默认即可 |
 | `SILICONFLOW_MODEL` | `Qwen/Qwen3-30B-A3B` | 默认即可，如需更换模型 |
 | `SILICONFLOW_TOOL_MODEL` | `Qwen/Qwen3-8B` | 工具调用模型，默认即可 |
@@ -361,7 +361,7 @@ api_server:
 
 ## 七、子会话（Subsession）配置
 
-子会话机制让 Deepsee 为每个微信联系人/群维护独立的 AI 会话上下文，每个会话可以有独立的角色设定和模型路由。
+子会话机制让 Deepsee 为每个微信联系人/群维护独立的会话配置；其中 `system_prompt` 是权威数据源，但只允许 Hermes bridge 统一解释，Deepsee 不再作为第二套 prompt/model 回复引擎。
 
 ### 7.1 查看当前子会话配置
 
@@ -389,8 +389,8 @@ curl -X POST http://127.0.0.1:8000/api/wechat-gateway/subsession-config/<chat_id
 
 | 参数 | 说明 | 默认值 |
 |------|------|--------|
-| `system_prompt` | 该联系人的专属角色设定 | 全局默认 |
-| `model` | 回复使用的 AI 模型 | 全局默认 |
+| `system_prompt` | 该联系人的专属角色设定（由 Hermes bridge 解释） | 全局默认 |
+| `model` | 兼容/调试字段；生产自动回复不应依赖这里作为第二生成出口 | 全局默认 |
 | `history_limit` | 上下文保留的最大消息数 | 50 |
 | `enable_summary` | 是否启用历史摘要压缩 | true |
 | `summary_interval` | 每 N 条消息生成一次摘要 | 10 |
@@ -534,7 +534,7 @@ ufw allow 8000
 git clone https://github.com/leecyno1/Deepsee.git /opt/deepsee
 cd /opt/deepsee
 cp .env.production-lite.example .env
-# 编辑 .env：修改 HOST=0.0.0.0、AGENT_API_TOKEN、SILICONFLOW_API_KEY
+# 编辑 .env：修改 HOST=0.0.0.0、AGENT_API_TOKEN、SILICONFLOW_API_KEY（SILICONFLOW 仅保留给兼容链路）
 bash scripts/manage.sh prod-lite
 bash scripts/manage.sh start
 ```

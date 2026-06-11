@@ -214,7 +214,7 @@ POST /api/wechat-gateway/evaluate-reply
 GET  /api/wechat-gateway/subsession-config/{id}
 POST /api/wechat-gateway/subsession-config/{id}
 ```
-管理 WeChat 子会话的自有角色、模型路由、历史管理策略。
+管理 WeChat 子会话配置；`system_prompt` 为权威数据源，但运行时只允许 Hermes bridge 统一解释，避免 Deepsee 形成第二套 prompt/model 出口。
 
 ---
 

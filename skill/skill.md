@@ -23,7 +23,7 @@
 
 ## 系统架构
 
-- **Deepsee Server** = 后端 API（消息存储、AI 分析、微信网关回调）
+- **Deepsee Server** = 后端 API（消息存储、微信网关回调、队列、规则执行；自动回复文本统一交给 Hermes bridge 生成）
 - **wx-auto** = Agent 端配套（技能、API 文档、部署指引、使用须知）
 - **wechatapi.net** = iPad 协议底座（已完全封装，用户无需接触）
 
@@ -44,7 +44,7 @@ Agent ──HTTP──► Deepsee(:8000) ──HTTP──► wechatapi.net
 
 Agent 有两种方式操作微信：
 
-### 方式 A：通过 Deepsee API（推荐，有数据持久化和 AI 分析）
+### 方式 A：通过 Deepsee API（推荐，有数据持久化和网关编排；自动回复生成由 Hermes bridge 负责）
 
 ```bash
 # 发送消息
@@ -131,7 +131,7 @@ cd /opt/deepsee
 
 # 生产环境配置
 cp .env.production-lite.example .env
-vim .env   # 配置 HOST=0.0.0.0, AGENT_API_TOKEN, SILICONFLOW_API_KEY 等
+vim .env   # 配置 HOST=0.0.0.0, AGENT_API_TOKEN, SILICONFLOW_API_KEY 等（SILICONFLOW 仅保留给本地分析/兼容链路）
 bash scripts/manage.sh prod-lite
 bash scripts/manage.sh start
 ```

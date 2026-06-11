@@ -22,11 +22,16 @@
 2. 从 https://github.com/leecyno1/Deepsee 克隆后端服务到服务器
 3. 部署 Deepsee（提供服务器 IP，用于微信回调地址）
 4. 配置 WeChatAPI token + appId
-5. 配置 AI 模型（默认 SiliconFlow）
+5. 更新 Deepsee 的 Hermes bridge / callback 配置（不要在 wx-auto 文档里再把 Deepsee 写成独立 prompt/model 回复引擎）
 6. 将 Hermes API Server 指向 Deepsee 的 agent bridge
 ```
 
 完整安装步骤见下方。
+
+文档边界：
+- 本仓库的正式部署手册是 `DEPLOY.md`，用于 Agent 侧 / Hermes 侧 / 跨机部署
+- Deepsee/0913 仓库内部署/迁移的 source of truth 是其仓库内的 `DEPLOY_FULL.md`
+- 不要把两个仓库的部署文档合并成一份
 
 ---
 
@@ -57,7 +62,7 @@
 ```
 
 **两种调用模式：**
-1. **通过 Deepsee** — 有业务逻辑、数据持久化、AI 分析、权限控制（推荐日常使用）
+1. **通过 Deepsee** — 有业务逻辑、数据持久化、权限控制、微信网关；自动回复的 prompt 解释与文本生成统一由 Hermes bridge 负责（推荐日常使用）
 2. **直接调用 wechatapi.net** — 原始协议，适合批量操作或 Deepsee 未封装的功能
 
 ---
@@ -85,7 +90,7 @@ cp .env.production-lite.example .env
 # HOST=0.0.0.0           # 监听所有接口
 # PORT=8000              # 服务端口
 # AGENT_API_TOKEN=<随机字符串>  # Agent 调用密钥
-# SILICONFLOW_API_KEY=xxx      # LLM API Key
+# SILICONFLOW_API_KEY=xxx      # Deepsee 本地分析/兼容链路所需；生产自动回复主链路由 Hermes bridge 负责
 # WECHATPAD_HTTP_BASE=http://api.wechatapi.net/finder/v2/api  # 或 your_proxy
 # 设置 wechatapi 的 token 和 appId（后续通过 API 配置）
 
@@ -225,5 +230,5 @@ wx-auto/
 │   ├── wx-auto.skill.md      # Hermes skill 主文件
 │   └── references/           # 技能引用资源
 └── templates/
-    └── ai_config.json.example # AI 模型路由配置示例
+    └── ai_config.json.example # Deepsee 本地分析/兼容链路配置示例；自动回复主链路不再以此作为 prompt/model 真源
 ```

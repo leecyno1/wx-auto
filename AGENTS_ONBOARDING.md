@@ -36,7 +36,7 @@ Hermes Agent ──HTTP──► Deepsee Server(:8000) ──HTTP──► wecha
                         data/app.db
 ```
 
-- **Deepsee** = 后端 API（消息存储、AI 分析、微信网关回调），在云服务器运行
+- **Deepsee** = 后端 API（消息存储、微信网关回调、规则/队列执行），在云服务器运行
 - **wechatapi.net** = iPad 协议底座，直接 POST HTTP 收发微信消息
 - **wx-auto** = Agent 端配套仓库（技能 + API 文档 + 部署脚本）
 

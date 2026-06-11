@@ -124,8 +124,8 @@ vim .env
 # 必须配置：
 #   HOST=0.0.0.0
 #   AGENT_API_TOKEN=<强随机字符串>
-#   SILICONFLOW_API_KEY=sk-xxx
-#   SILICONFLOW_MODEL=Qwen/Qwen3-30B-A3B
+#   SILICONFLOW_API_KEY=sk-xxx   # Deepsee 本地分析/兼容链路；生产自动回复主链路由 Hermes bridge 负责
+#   SILICONFLOW_MODEL=Qwen/Qwen3-30B-A3B  # 兼容/调试用，不应作为第二生成出口
 
 bash scripts/manage.sh start
 ```
