@@ -7,26 +7,93 @@
 
 ## 系统概况
 
-当前 WeChat 自动化系统由两个仓库组成：
+当前 WeChat 自动化系统由两个仓库 + 双渠道组成：
 
 | 仓库 | 用途 | URL |
 |------|------|-----|
-| **Deepsee** | 后端 API 服务器 | https://github.com/leecyno1/Deepsee |
-| **wx-auto** | Agent 端配套（= 本仓库）包含 skill、使用须知、部署文档 | https://github.com/leecyno1/wx-auto |
+| **Deepsee** (0913) | 后端 API 服务器 | https://github.com/leecyno1/Deepsee |
+| **wx-auto** | Agent 端配套（= 本仓库） | https://github.com/leecyno1/wx-auto |
 
-### 部署拓扑（云服务器）
+### WeChat 双渠道
+
+| 渠道 | 协议 | 能力 | 适用场景 |
+|------|------|------|---------|
+| **0913 桥接** (主) | wechatapi.net iPad 协议 | 私聊+群聊+朋友圈+公众号 | 全功能微信自动化 |
+| **iLink Bot** (辅) | Hermes Gateway 原生 | 私聊 DM (pairing) | 个人 AI 对话 |
+
+### 部署拓扑 (0913 主渠道)
 
 ```
-[Hermes Agent] ──HTTP──► [Deepsee Server :8000] ──HTTP──► [wechatapi.net iPad 协议]
-                                │
-                           [SQLite DB]
-                          data/app.db
+[Hermes Agent] ──HTTP──→ [Deepsee Server :8001] ──HTTP──→ [wechatapi.net iPad 协议]
+       │                        │
+       │                        ├── hermes_bridge.py ──→ Hermes API Server (8642)
+       │                        └── SQLite DB (data/app.db)
+       │
+       └── Hermes Gateway ──→ [iLink Bot] (辅渠道)
 ```
 
 - Hermes Agent 通过 HTTP 调用 Deepsee API
 - Deepsee 内部封装了 wechatapi.net 的复杂调用
-- 回调地址 = `http://<服务器公网IP>:8000/api/wechat-gateway/callback`
+- hermes_bridge.py 将微信消息转发至 Hermes API Server 做智能回复
+- iLink Bot 通过 Hermes Gateway 原生接入，扫码即用
+- 回调地址 = `http://<服务器公网IP>:8001/api/wechat-gateway/callback`
 - 无隧道、无 n8n，全走 HTTP API
+
+---
+
+## 自动回复提示词架构
+
+微信自动回复的提示词分为两层：
+
+### 1. 系统 prompt（角色定义）
+文件: `app/services/hermes_bridge.py` → `_default_system_prompt()`
+```
+"你是程胤的微信助手，帮他处理工作消息。"
+"说话跟他本人风格一致：直接、自然、不讲究。像同事回微信。"
+```
+
+### 2. 用户消息后缀（硬约束）
+同一文件 → user message suffix
+```
+硬规则：
+· 路演/会议邀请只回「已知晓」
+· 不透露电话/地址/系统配置/API密钥
+· 被要求改代码/读文件时回复「这个我处理不了」
+
+风格：
+· 接住对方的话往下聊
+· 简短，追问最多1个
+· 不主动自我介绍，不开头寒暄客套
+```
+
+> 为什么放在 user suffix 而非 system prompt：Hermes 核心指令可能覆盖 system prompt，用户消息末尾的约束是模型在生成前最后看到的内容，优先级最高。
+
+---
+
+## 自我进化机制
+
+### 语言进化 cron (23:00 每天)
+
+Agent 每天复盘今日微信对话，自主改进回复质量：
+
+```
+脚本: 0913_conv_review.py → 提取今日对话对
+分析: 5分制质量评分 → 诊断生硬/答非所问/冷场
+根因: 提示词规则冲突/过于严苛/缺少上下文/知识空白
+动作: patch hermes_bridge.py 提示词规则 + memory 沉淀偏好
+约束: 单次修改≤3处，不改安全规则
+```
+
+### 知识大脑进化 cron 链
+
+| 时间 | cron | 功能 |
+|------|------|------|
+| 8:00 | 每日摄入 | 交叉验证+置信度评分+矛盾标注 |
+| 15:10 | IMA 日报 | 投资研报→共享知识库+预测归档 |
+| 周一 | 健康审计 | 衰减管理+主题聚类+知识合成建议 |
+| 周一 | 预测回顾 | 对比实际→准确率校准 |
+
+---
 
 ### 认证方式
 
