@@ -132,6 +132,12 @@ Body: {"appId": "<appid>", "toWxid": "wxid", "content": "text"}
 
 ## 微信好友管理
 
+### 销售检测
+
+自动回复检测对方昵称/备注是否含「销售」字样，若匹配则自动回复「这方面我问一下分析师，稍等」+ 一个追问。
+
+实现位置：`app/services/hermes_bridge.py` — `_call_minimax_direct()` 和 `_call_hermes_api()` 的硬规则中。
+
 ### 僵尸粉清理 (`scripts/zombie_cleaner.py`)
 
 **位置**：Deepsee 仓库 `/opt/deepsee/scripts/zombie_cleaner.py`
