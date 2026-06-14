@@ -130,6 +130,31 @@ Body: {"appId": "<appid>", "toWxid": "wxid", "content": "text"}
 
 ---
 
+## 微信好友管理
+
+### 僵尸粉清理 (`scripts/zombie_cleaner.py`)
+
+**位置**：Deepsee 仓库 `/opt/deepsee/scripts/zombie_cleaner.py`
+
+**流程**：分组扫描(100人/组) → 发结果给用户确认 → 用户决定后执行删除 → 下一组
+
+| 命令 | 用途 |
+|------|------|
+| `python scripts/zombie_cleaner.py scan` | 扫描下一组 |
+| `python scripts/zombie_cleaner.py delete` | 删除当前组确认结果 |
+| `python scripts/zombie_cleaner.py status` | 查看进度 |
+| `python scripts/zombie_cleaner.py reset` | 重置进度 |
+
+**结果分类**：
+- 🟡 可确认(relation=1/2/6)：对方已删/拉黑
+- ⚪ 无法判断(relation=99)：API 无法确定
+
+**陷阱**：scan 会覆盖 `zombie_candidates.json`，必须先 delete 再 scan 下一组。用户选择性保留某人时，手动从 JSON 移除该条目再 delete。
+
+数据文件：`data/zombie_progress.json`(进度) + `data/zombie_candidates.json`(当前组结果) + `data/real_friends.json`(好友列表)
+
+---
+
 ## 部署指引
 
 ### 新服务器（云服务器，直接 IP 回调）

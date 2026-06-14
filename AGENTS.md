@@ -167,8 +167,23 @@ Agent 每天复盘今日微信对话，自主改进回复质量：
 | `POST /login/checkLogin` | 检查登录状态 | uuid |
 | `POST /login/checkOnline` | 检查是否在线 | 无额外参数 |
 | `POST /login/setCallback` | 设置回调地址 | callbackUrl |
+| `POST /contacts/deleteFriend` | 删除好友 | wxid |
+| `POST /contacts/checkRelation` | 检测好友关系 | wxids |
 
 > 完整端点列表见 `docs/` 下各模块文档。
+
+### 僵尸粉清理
+
+脚本位置: `scripts/zombie_cleaner.py`（Hermes 内 skill: `wechat-zombie-cleaner`）
+
+```bash
+python scripts/zombie_cleaner.py scan    # 扫描100人/组
+python scripts/zombie_cleaner.py delete  # 删除当前组结果
+python scripts/zombie_cleaner.py status  # 查看进度
+python scripts/zombie_cleaner.py reset   # 重置
+```
+
+工作流：scan → 用户确认 → delete → 下一组，不可自动跳过确认。
 
 ---
 
